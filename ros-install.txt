@@ -1,0 +1,34 @@
+# For making this file I'd even install my ros on raspi once again...
+sudo update
+sudo upgrade
+sudo sh -c 'echo "deb http://mirrors.tuna.tsinghua.edu.cn/ros/ubuntu/ `lsb_release -cs` main" > /etc/apt/sources.list.d/ros-latest.list'
+sudo apt-get install python-rosdep python-rosinstall-generator python-vcstool python-rosinstall build-essential
+sudo gedit /etc/hosts
+# 151.101.84.133  raw.githubusercontent.com
+sudo apt install tsocks
+sudo nano /etc/tsocks.conf
+# edit localhost & socks server address and port
+tsocks git clone https://github.com/CrazyDogCN/proxy_configuration.git
+cd proxy_configuration
+chmod +x proxy.py
+sudo ./proxy.py
+# edit socks server address and port (it's global proxy)
+sudo reboot
+sudo rosdep init
+rosdep update
+# It's ridiculous that u can't use "sudo apt install ros-melodic-desktop" on raspi!!!
+mkdir -p ~/ros_catkin_ws/src
+cd ~/ros_catkin_ws
+rosinstall_generator desktop --rosdistro melodic --deps --wet-only --tar > melodic-desktop-wet.rosinstall
+wstool init -j8 src melodic-desktop-wet.rosinstall
+sudo ~/proxy_configuration/proxy.py
+sudo reboot
+# Remove Proxy Here (Proxy will make error in rosdep install...)
+cd ros_catkin_ws
+rosdep install --from-paths src --ignore-src --rosdistro melodic -y
+sudo ./src/catkin/bin/catkin_make_isolated --install -DCMAKE_BUILD_TYPE=Release --install-space /opt/ros/melodic -j2
+echo "source /opt/ros/melodic/setup.bash" >> ~/.bashrc
+# DONE ?
+# Some ROS dependancis cannot be located by apt install and I install it by clone it from github to src (rosbridge , rosauth and even turtlesim...)
+rosdep install --from-paths src --ignore-src --rosdistro=${ROS_DISTRO} -y --os=ubuntu:bionic
+# DONE!!!
